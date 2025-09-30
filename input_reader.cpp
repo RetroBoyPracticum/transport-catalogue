@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <vector>
+#include <unordered_map>
 
 /**
  * Парсит строку вида "10.123,  -30.1837" и возвращает пару координат (широта, долгота)
@@ -102,6 +104,41 @@ void InputReader::ParseLine(std::string_view line) {
     }
 }
 
-void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue& catalogue) const {
-    // Реализуйте метод самостоятельно
+void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue &catalogue) const {
+    std::unordered_map<std::string_view, const Stop *> stop_map;
+    /* Сначала обработаем все остановки */
+    for (const auto &c : commands_) {
+        if (c.command == "Stop") {
+            Stop stop = {
+                .name = c.id,
+                .coordinates = ParseCoordinates(c.description),
+            };
+            catalogue.AddStop(stop);
+        }
+    }
+
+    /* Далее подготовим контейнер для поиска наличия остановок */
+    for (const auto &c : commands_) {
+        if (c.command == "Stop") {
+            if (const auto *stop = catalogue.FindStop(c.id)) {
+                stop_map[stop->name] = stop;
+            }
+        }
+    }
+
+    /* Затем добавим маршруты */
+    for (const auto &c : commands_) {
+        if (c.command == "Bus") {
+            std::vector<const Stop *> stops;
+
+            for (std::string_view name : ParseRoute(c.description)) {
+                auto it = stop_map.find(name);
+                if (it != stop_map.end()) {
+                    stops.push_back(it->second);
+                }
+            }
+
+            catalogue.AddBus({c.id, stops});
+        }
+    }
 }
