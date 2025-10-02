@@ -7,12 +7,12 @@
 
 static void PrintBusStats(std::string_view name, const std::optional<TransportCatalogue::BusStats> stats, std::ostream& output) {
     output << "Bus " << name << ": ";
-    if (stats) {
+    if (!stats) {
+        output << "not found";
+    } else {
         output << stats->stops_count << " stops on route, "
                << stats->stops_count_unique << " unique stops, "
                << std::setprecision(6) << stats->route_length << " route length";
-    } else {
-        output << "not found";
     }
     output << std::endl;    
 }
@@ -37,10 +37,10 @@ void ParseAndPrintStat(const TransportCatalogue& catalogue, std::string_view req
     if (request.find("Bus") == 0) {
         auto bus_name = std::string(request.substr(4));
         auto bus_stats = catalogue.GetBusStats(bus_name);
-        PrintBusStats(bus_name, bus_stats, output);
+        PrintBusStats(std::move(bus_name), bus_stats, output);
     } else if (request.find("Stop") == 0) {
         auto stop_name = std::string(request.substr(5));
         auto stop_stats = catalogue.GetStopStats(stop_name);
-        PrintStopStats(stop_name, stop_stats, output);
+        PrintStopStats(std::move(stop_name), stop_stats, output);
     }
 }

@@ -8,6 +8,8 @@
 #include "geo.h"
 #include <set>
 
+namespace transport_catalogue {
+
 struct Stop {
 	std::string name;
 	Coordinates coordinates;
@@ -18,13 +20,15 @@ struct Bus {
 	std::vector<const Stop *> stops;
 };
 
+}
+
 class TransportCatalogue {
 public:
-	void AddStop(Stop stop);
-	void AddBus(Bus bus);
+	void AddStop(transport_catalogue::Stop stop);
+	void AddBus(transport_catalogue::Bus bus);
 
-	const Stop *FindStop(std::string_view name) const;
-	const Bus *FindBus(std::string_view name) const;
+	const transport_catalogue::Stop *FindStop(std::string_view name) const;
+	const transport_catalogue::Bus *FindBus(std::string_view name) const;
 
 	struct StopStats {
 		std::set<std::string> buses;
@@ -41,13 +45,12 @@ public:
 	std::optional<TransportCatalogue::BusStats> GetBusStats(std::string_view name) const;
 
 private:
-	std::deque<Stop> stops_;
-	std::deque<Bus> buses_;
+	std::deque<transport_catalogue::Stop> stops_;
+	std::deque<transport_catalogue::Bus> buses_;
 	/* Контейнеры для поиска */
-	std::unordered_map<std::string_view, const Stop *> stop_name_to_stop_;
-	std::unordered_map<std::string_view, const Bus *> bus_name_to_bus_;
+	std::unordered_map<std::string_view, const transport_catalogue::Stop *> stop_name_to_stop_;
+	std::unordered_map<std::string_view, const transport_catalogue::Bus *> bus_name_to_bus_;
+	std::unordered_map<std::string_view, std::set<std::string>> stop_name_to_buses_;
 
-	std::unordered_map<std::string_view, std::set<std::string>> stop_to_buses_;
-
-	double ComputeRouteLength(const Bus& bus) const;
+	double ComputeRouteLength(const transport_catalogue::Bus& bus) const;
 };

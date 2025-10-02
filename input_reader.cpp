@@ -105,40 +105,28 @@ void InputReader::ParseLine(std::string_view line) {
 }
 
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue &catalogue) const {
-    std::unordered_map<std::string_view, const Stop *> stop_map;
     /* Сначала обработаем все остановки */
     for (const auto &c : commands_) {
         if (c.command == "Stop") {
-            Stop stop = {
-                .name = c.id,
-                .coordinates = ParseCoordinates(c.description),
-            };
-            catalogue.AddStop(stop);
-        }
-    }
-
-    /* Далее подготовим контейнер для поиска наличия остановок */
-    for (const auto &c : commands_) {
-        if (c.command == "Stop") {
-            if (const auto *stop = catalogue.FindStop(c.id)) {
-                stop_map[stop->name] = stop;
-            }
+            transport_catalogue::Stop stop = {c.id, ParseCoordinates(c.description)};
+            catalogue.AddStop(std::move(stop));
         }
     }
 
     /* Затем добавим маршруты */
     for (const auto &c : commands_) {
         if (c.command == "Bus") {
-            std::vector<const Stop *> stops;
+            std::vector<std::string_view> stop_names = ParseRoute(c.description);
+            std::vector<const transport_catalogue::Stop *> pStops;
+            pStops.reserve(stop_names.size());
 
-            for (std::string_view name : ParseRoute(c.description)) {
-                auto it = stop_map.find(name);
-                if (it != stop_map.end()) {
-                    stops.push_back(it->second);
+            for (std::string_view name : stop_names) {
+                if (const transport_catalogue::Stop *stop = catalogue.FindStop(name)) {
+                    pStops.push_back(stop);
                 }
             }
 
-            catalogue.AddBus({c.id, stops});
+            catalogue.AddBus({std::move(c.id), std::move(pStops)});
         }
     }
 }
