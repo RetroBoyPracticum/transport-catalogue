@@ -6,19 +6,30 @@ void TransportCatalogue::AddStop(Stop stop) {
     stops_.push_back(stop);
     /* Обновляем контейнер для поиска остановок */
     const Stop *added_stop = &stops_.back();
-    stop_name_to_stop[added_stop->name] = added_stop;
+    stop_name_to_stop_[added_stop->name] = added_stop;
+
+    /* Создаем пустой set под автобусы */
+    stop_to_buses_[added_stop->name];
 }
 
 void TransportCatalogue::AddBus(Bus bus) {
     buses_.push_back({bus.name, bus.stops});
-    /* Обновляем контейнер для поиска маршрутов */
+    
+    /* Обновляем контейнеры для поиска */
+    // маршрутов по собственному имени
     const Bus *added_bus = &buses_.back();
-    bus_name_to_bus[added_bus->name] = added_bus;
+    bus_name_to_bus_[added_bus->name] = added_bus;
+    
+    // маршрутов по имени остановки
+    std::string_view bus_name = bus.name;
+    for (const Stop *stop : added_bus->stops) {
+        stop_to_buses_[stop->name].insert(std::string(bus_name));
+    }
 }
 
 const Stop *TransportCatalogue::FindStop(std::string_view name) const {
-    auto it = stop_name_to_stop.find(name);
-    if (it != stop_name_to_stop.end()) {
+    auto it = stop_name_to_stop_.find(name);
+    if (it != stop_name_to_stop_.end()) {
         return it->second;
     }
 
@@ -26,14 +37,47 @@ const Stop *TransportCatalogue::FindStop(std::string_view name) const {
 }
 
 const Bus *TransportCatalogue::FindBus(std::string_view name) const {
-    auto it = bus_name_to_bus.find(name);
-    if (it != bus_name_to_bus.end()) {
+    auto it = bus_name_to_bus_.find(name);
+    if (it != bus_name_to_bus_.end()) {
         return it->second;
     }
 
     return nullptr;
 }
 
+std::optional<TransportCatalogue::StopStats> TransportCatalogue::GetStopStats(std::string_view name) const {
+    const Stop *stop = FindStop(name);
+    if (stop == nullptr) {
+        return std::nullopt;
+    }
+
+    StopStats stats;
+
+    auto it = stop_to_buses_.find(name);
+    if (it != stop_to_buses_.end()) {
+        stats.buses = it->second;
+    }
+
+    return stats;
+}
+
+std::optional<TransportCatalogue::BusStats> TransportCatalogue::GetBusStats(std::string_view name) const {
+    const Bus* bus = FindBus(name);
+    if (bus == nullptr) {
+        return std::nullopt;
+    }
+    
+    BusStats stats;
+    
+    stats.stops_count = bus->stops.size();
+    
+    std::unordered_set<const Stop*> unique(bus->stops.begin(), bus->stops.end());
+    stats.stops_count_unique = unique.size();
+    
+    stats.route_length = ComputeRouteLength(*bus);
+    
+    return stats;
+}
 
 double TransportCatalogue::ComputeRouteLength(const Bus& bus) const {
     double total_length = 0.0;
@@ -48,22 +92,4 @@ double TransportCatalogue::ComputeRouteLength(const Bus& bus) const {
     }
     
     return total_length;
-}
-
-std::optional<TransportCatalogue::BusStats> TransportCatalogue::GetBusStats(std::string_view name) const {
-    const Bus* bus = FindBus(name);
-    if (!bus) {
-        return std::nullopt;
-    }
-    
-    BusStats stats;
-    
-    stats.stops_count = bus->stops.size();
-    
-    std::unordered_set<const Stop*> unique(bus->stops.begin(), bus->stops.end());
-    stats.stops_count_unique = unique.size();
-    
-    stats.route_length = ComputeRouteLength(*bus);
-    
-    return stats;
 }
