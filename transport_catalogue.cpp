@@ -13,7 +13,7 @@ void TransportCatalogue::AddStop(transport_catalogue::Stop stop) {
     stop_name_to_buses_[added_stop->name];
 }
 
-void TransportCatalogue::AddBus(transport_catalogue::Bus bus) {
+void TransportCatalogue::AddBus(const transport_catalogue::Bus &bus) {
     buses_.push_back({bus.name, bus.stops});
     
     /* Обновляем контейнеры для поиска */
@@ -47,19 +47,17 @@ const transport_catalogue::Bus *TransportCatalogue::FindBus(std::string_view nam
 }
 
 std::optional<TransportCatalogue::StopStats> TransportCatalogue::GetStopStats(std::string_view name) const {
-    const transport_catalogue::Stop *stop = FindStop(name);
+    const transport_catalogue::Stop* stop = FindStop(name);
     if (stop == nullptr) {
         return std::nullopt;
     }
 
-    StopStats stats;
-
     auto it = stop_name_to_buses_.find(name);
     if (it != stop_name_to_buses_.end()) {
-        stats.buses = it->second;
+        return StopStats{&it->second};
+    } else {
+        return StopStats{nullptr}; //< Найден маршрут, но список остановок пуст. return std::nullopt??
     }
-
-    return stats;
 }
 
 std::optional<TransportCatalogue::BusStats> TransportCatalogue::GetBusStats(std::string_view name) const {

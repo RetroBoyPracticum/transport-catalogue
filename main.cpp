@@ -15,12 +15,4 @@ int main() {
     StatsReader stats_reader;
     stats_reader.ParseStatsRequests(cin);
     stats_reader.PrintStatistics(catalogue, cout);
-
-    int stat_request_count;
-    cin >> stat_request_count >> ws;
-    for (int i = 0; i < stat_request_count; ++i) {
-        string line;
-        getline(cin, line);
-        ParseAndPrintStat(catalogue, line, cout);
-    }
 }

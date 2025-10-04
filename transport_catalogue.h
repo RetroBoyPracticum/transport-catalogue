@@ -25,13 +25,13 @@ struct Bus {
 class TransportCatalogue {
 public:
 	void AddStop(transport_catalogue::Stop stop);
-	void AddBus(transport_catalogue::Bus bus);
+	void AddBus(const transport_catalogue::Bus &bus);
 
 	const transport_catalogue::Stop *FindStop(std::string_view name) const;
 	const transport_catalogue::Bus *FindBus(std::string_view name) const;
 
 	struct StopStats {
-		std::set<std::string> buses;
+		const std::set<std::string> *buses;
 	};
 
 	std::optional<TransportCatalogue::StopStats> GetStopStats(std::string_view name) const;
