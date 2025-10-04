@@ -32,6 +32,10 @@ public:
      */
     void ApplyCommands(TransportCatalogue& catalogue) const;
 
+    /**
+     * Читает и парсит входящий поток команд
+     */
+    static InputReader ReadBaseRequests(std::istream& input);
 private:
     std::vector<CommandDescription> commands_;
 };

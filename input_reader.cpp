@@ -5,6 +5,7 @@
 #include <iterator>
 #include <vector>
 #include <unordered_map>
+#include <istream>
 
 /**
  * Парсит строку вида "10.123,  -30.1837" и возвращает пару координат (широта, долгота)
@@ -129,4 +130,17 @@ void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue &catalogue) 
             catalogue.AddBus({std::move(c.id), std::move(pStops)});
         }
     }
+}
+
+InputReader InputReader::ReadBaseRequests(std::istream& input) {
+    int count;
+    input >> count >> std::ws;
+    
+    InputReader reader;
+    for (int i = 0; i < count; ++i) {
+        std::string line;
+        getline(input, line);
+        reader.ParseLine(line);
+    }
+    return reader;
 }

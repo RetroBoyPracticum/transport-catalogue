@@ -9,18 +9,12 @@ using namespace std;
 int main() {
     TransportCatalogue catalogue;
 
-    int base_request_count;
-    cin >> base_request_count >> ws;
+    InputReader input_reader = InputReader::ReadBaseRequests(cin);
+    input_reader.ApplyCommands(catalogue);
 
-    {
-        InputReader reader;
-        for (int i = 0; i < base_request_count; ++i) {
-            string line;
-            getline(cin, line);
-            reader.ParseLine(line);
-        }
-        reader.ApplyCommands(catalogue);
-    }
+    StatsReader stats_reader;
+    stats_reader.ParseStatsRequests(cin);
+    stats_reader.PrintStatistics(catalogue, cout);
 
     int stat_request_count;
     cin >> stat_request_count >> ws;
